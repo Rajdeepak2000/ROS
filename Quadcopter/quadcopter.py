@@ -81,9 +81,9 @@ class Edrone():
 
         # Publishing /edrone/pwm, /roll_error, /pitch_error, /yaw_error
         self.pwm_pub = rospy.Publisher('/edrone/pwm',prop_speed, queue_size=1)
-        self.pwm_pub = rospy.Publisher('/roll_error',prop_speed, queue_size=1)
-        self.pwm_pub = rospy.Publisher('/pitch_error',prop_speed, queue_size=1)
-        self.pwm_pub = rospy.Publisher('/yaw_error',prop_speed, queue_size=1)
+        self.roll_pub = rospy.Publisher('/roll_error',Float64, queue_size=1)
+        self.pitch_pub = rospy.Publisher('/pitch_error',Float64, queue_size=1)
+        self.yaw_pub = rospy.Publisher('/yaw_error',Float64, queue_size=1)
        
         
         # ------------------------Add other ROS Publishers here-----------------------------------------------------
@@ -125,6 +125,7 @@ class Edrone():
         self.setpoint_cmd[0] = msg.rcRoll
         self.setpoint_cmd[1] = msg.rcYaw
         self.setpoint_cmd[2] = msg.rcPitch
+        self.setpoint_cmd[3] = msg.rcThrottle
         
   
         
@@ -225,6 +226,9 @@ class Edrone():
         self.prev_values[1]=self.error[1]
         self.prev_values[2]=self.error[2]
         self.pwm_pub.publish(self.pwm_cmd)
+        self.roll_pub.publish(self.output_roll)
+        self.pitch_pub.publish(self.output_pitch)
+        self.yaw_pub.publish(self.output_yaw)
 
 
 if __name__ == '__main__':
