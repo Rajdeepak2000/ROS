@@ -50,10 +50,10 @@ class Edrone():
         # rosmsg show vitarana_drone/prop_speed
 
         self.pwm_cmd = prop_speed()
-        self.pwm_cmd.prop1 = 0
-        self.pwm_cmd.prop2 = 0
-        self.pwm_cmd.prop3 = 0
-        self.pwm_cmd.prop4 = 0
+        self.pwm_cmd.prop1 = 0.0
+        self.pwm_cmd.prop2 = 0.0
+        self.pwm_cmd.prop3 = 0.0
+        self.pwm_cmd.prop4 = 0.0
 
         # initial setting of Kp, Kd and ki for [roll, pitch, yaw]. eg: self.Kp[2] corresponds to Kp value in yaw axis
         # after tuning and computing corresponding PID parameters, change the parameters
@@ -63,7 +63,7 @@ class Edrone():
         self.prev_values = [0,0,0]
         self.error=[0,0,0]
         self.max_values = [1024, 1024, 1024, 1024]
-        self.min_values = [0, 0, 0, 0]
+        self.min_values = [1024, 1024, 1024, 1024]
         self.diff_err=[0,0,0]
         self.iterm=[0,0,0]
         
@@ -84,6 +84,10 @@ class Edrone():
         self.roll_pub = rospy.Publisher('/roll_error',Float64, queue_size=1)
         self.pitch_pub = rospy.Publisher('/pitch_error',Float64, queue_size=1)
         self.yaw_pub = rospy.Publisher('/yaw_error',Float64, queue_size=1)
+
+
+
+
        
         
         # ------------------------Add other ROS Publishers here-----------------------------------------------------
@@ -200,15 +204,7 @@ class Edrone():
         self.prop3_speed=self.pwm_cmd.prop3+ self.output_roll - self.output_pitch + self.output_yaw
         self.prop4_speed=self.pwm_cmd.prop4- self.output_roll - self.output_pitch - self.output_yaw
         #8.limiting values
-        if(self.pwm_cmd.prop1 > self.max_values[0]):self.pwm_cmd.prop1 = self.max_values[0]
-        if(self.pwm_cmd.prop2 > self.max_values[1]):self.pwm_cmd.prop1 = self.max_values[1]
-        if(self.pwm_cmd.prop3 > self.max_values[2]):self.pwm_cmd.prop1 = self.max_values[2]
-        if(self.pwm_cmd.prop4 > self.max_values[3]):self.pwm_cmd.prop1 = self.max_values[3]
-                
-        if(self.pwm_cmd.prop1 < self.min_values[0]):self.pwm_cmd.prop1 = self.min_values[0]
-        if(self.pwm_cmd.prop2 < self.min_values[1]):self.pwm_cmd.prop1 = self.min_values[1]
-        if(self.pwm_cmd.prop3 < self.min_values[2]):self.pwm_cmd.prop1 = self.min_values[2]
-        if(self.pwm_cmd.prop4 < self.min_values[3]):self.pwm_cmd.prop1 = self.min_values[3]
+
         
         if(self.prop1_speed > self.max_values[0]):self.prop1_speed = self.max_values[0]
         if(self.prop2_speed > self.max_values[1]):self.prop2_speed = self.max_values[1]
@@ -229,6 +225,10 @@ class Edrone():
         self.roll_pub.publish(self.output_roll)
         self.pitch_pub.publish(self.output_pitch)
         self.yaw_pub.publish(self.output_yaw)
+
+
+
+
 
 
 if __name__ == '__main__':
