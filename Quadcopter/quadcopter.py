@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+ros#!/usr/bin/env python
 
 '''
 This python file runs a ROS-node of name attitude_control which controls the roll pitch and yaw angles of the eDrone.
@@ -87,6 +87,25 @@ class Edrone():
 
 
 
+        #additional part
+        self.drone_orientation_euler_0=rospy.Publisher('/euler_orientation_0',Float64,queue_size=1)
+        self.drone_orientation_euler_1=rospy.Publisher('/euler_orientation_1',Float64,queue_size=1)
+        self.drone_orientation_euler_2=rospy.Publisher('/euler_orientation_2',Float64,queue_size=1)
+        self.setpoint_cmd_0=rospy.Publisher('/setpoint_cmd_0',Float64,queue_size=1)
+        self.setpoint_cmd_1=rospy.Publisher('/setpoint_cmd_1',Float64,queue_size=1)
+        self.setpoint_cmd_2=rospy.Publisher('/setpoint_cmd_2',Float64,queue_size=1)
+        self.setpoint_euler_0=rospy.Publisher('/setpoint_euler_0',Float64,queue_size=1)
+        self.setpoint_euler_1=rospy.Publisher('/setpoint_euler_1',Float64,queue_size=1)
+        self.setpoint_euler_2=rospy.Publisher('/setpoint_euler_2',Float64,queue_size=1)
+        self.error_0=rospy.Publisher('/error_0',Float64,queue_size=1)
+        self.error_1=rospy.Publisher('/error_1',Float64,queue_size=1)
+        self.error_2=rospy.Publisher('/error_2',Float64,queue_size=1)
+        self.diff_err_0=rospy.Publisher('/diff_err_0',Float64,queue_size=1)
+        self.diff_err_1=rospy.Publisher('/diff_err_1',Float64,queue_size=1)
+        self.diff_err_2=rospy.Publisher('/diff_err_2',Float64,queue_size=1)
+        self.iterm_0=rospy.Publisher('/iterm_0',Float64,queue_size=1)
+        self.iterm_1=rospy.Publisher('/iterm_1',Float64,queue_size=1)
+        self.iterm_2=rospy.Publisher('/iterm_2',Float64,queue_size=1)
 
        
         
@@ -227,7 +246,25 @@ class Edrone():
         self.yaw_pub.publish(self.output_yaw)
 
 
-
+        #additional
+        self.drone_orientation_euler_0.publish(self.drone_orientation_euler[0])
+        self.drone_orientation_euler_1.publish(self.drone_orientation_euler[1])
+        self.drone_orientation_euler_2.publish(self.drone_orientation_euler[2])
+        self.setpoint_euler_0.publish(self.setpoint_euler[0])
+        self.setpoint_euler_1.publish(self.setpoint_euler[1])
+        self.setpoint_euler_2.publish(self.setpoint_euler[2])
+        self.error_0.publish(self.error[0])
+        self.error_1.publish(self.error[1])
+        self.error_2.publish(self.error[2])
+        self.diff_err_0.publish(self.diff_err[0])
+        self.diff_err_1.publish(self.diff_err[1])
+        self.diff_err_2.publish(self.diff_err[2])
+        self.iterm_0.publish(self.iterm[0])
+        self.iterm_1.publish(self.iterm[1])
+        self.iterm_2.publish(self.iterm[2])
+        self.setpoint_cmd_0.publish(self.setpoint_cmd[0])
+        self.setpoint_cmd_1.publish(self.setpoint_cmd[1])
+        self.setpoint_cmd_2.publish(self.setpoint_cmd[2])
 
 
 
