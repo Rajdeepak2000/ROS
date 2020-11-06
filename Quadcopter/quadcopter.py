@@ -1,4 +1,4 @@
-ros#!/usr/bin/env python
+#!/usr/bin/env python
 
 '''
 This python file runs a ROS-node of name attitude_control which controls the roll pitch and yaw angles of the eDrone.
@@ -63,7 +63,7 @@ class Edrone():
         self.prev_values = [0,0,0]
         self.error=[0,0,0]
         self.max_values = [1024, 1024, 1024, 1024]
-        self.min_values = [1024, 1024, 1024, 1024]
+        self.min_values = [0,0,0,0]
         self.diff_err=[0,0,0]
         self.iterm=[0,0,0]
         
@@ -218,28 +218,33 @@ class Edrone():
         
         
         #6.calculating the prop speed
-        self.prop1_speed=self.pwm_cmd.prop1- self.output_roll + self.output_pitch + self.output_yaw
-        self.prop2_speed=self.pwm_cmd.prop2+ self.output_roll + self.output_pitch - self.output_yaw
-        self.prop3_speed=self.pwm_cmd.prop3+ self.output_roll - self.output_pitch + self.output_yaw
-        self.prop4_speed=self.pwm_cmd.prop4- self.output_roll - self.output_pitch - self.output_yaw
+        self.pwm_cmd.prop1=self.pwm_cmd.prop1- self.output_roll + self.output_pitch + self.output_yaw
+        self.pwm_cmd.prop2=self.pwm_cmd.prop2+ self.output_roll + self.output_pitch - self.output_yaw
+        self.pwm_cmd.prop3=self.pwm_cmd.prop3+ self.output_roll - self.output_pitch + self.output_yaw
+        self.pwm_cmd.prop4=self.pwm_cmd.prop4- self.output_roll - self.output_pitch - self.output_yaw
         #8.limiting values
 
+        if(self.pwm_cmd.prop1 > self.max_values[0]):self.pwm_cmd.prop1 = self.max_values[0]
+        if(self.pwm_cmd.prop2 > self.max_values[1]):self.pwm_cmd.prop2 = self.max_values[1]
+        if(self.pwm_cmd.prop3 > self.max_values[2]):self.pwm_cmd.prop3 = self.max_values[2]
+        if(self.pwm_cmd.prop4 > self.max_values[3]):self.pwm_cmd.prop4 = self.max_values[3]
+
+        if(self.pwm_cmd.prop1 < self.min_values[0]):self.pwm_cmd.prop1 = self.min_values[0]
+        if(self.pwm_cmd.prop2 < self.min_values[1]):self.pwm_cmd.prop2 = self.min_values[1]
+        if(self.pwm_cmd.prop3 < self.min_values[2]):self.pwm_cmd.prop3 = self.min_values[2]
+        if(self.pwm_cmd.prop4 < self.min_values[3]):self.pwm_cmd.prop4 = self.min_values[3]
+
         
-        if(self.prop1_speed > self.max_values[0]):self.prop1_speed = self.max_values[0]
-        if(self.prop2_speed > self.max_values[1]):self.prop2_speed = self.max_values[1]
-        if(self.prop3_speed > self.max_values[2]):self.prop3_speed = self.max_values[2]
-        if(self.prop4_speed > self.max_values[3]):self.prop4_speed = self.max_values[3]
+
         
-        if(self.prop1_speed < self.min_values[0]):self.prop1_speed = self.min_values[0]
-        if(self.prop2_speed < self.min_values[1]):self.prop2_speed = self.min_values[1]
-        if(self.prop3_speed < self.min_values[2]):self.prop3_speed = self.min_values[2]
-        if(self.prop4_speed < self.min_values[3]):self.prop4_speed = self.min_values[3]
+
         
         
         #9.updating error values.
         self.prev_values[0]=self.error[0]
         self.prev_values[1]=self.error[1]
         self.prev_values[2]=self.error[2]
+
         self.pwm_pub.publish(self.pwm_cmd)
         self.roll_pub.publish(self.output_roll)
         self.pitch_pub.publish(self.output_pitch)
