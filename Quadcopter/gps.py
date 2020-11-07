@@ -37,16 +37,16 @@ class Position():
 
 
 
-        self.command=rospy.Publisher('/drone_command',edrone_cmd,queue_size=1)
+        self.command=rospy.Publisher('/drone_command',edrone_cmd,queue_size=100)
         rospy.Subscriber('/edrone/gps',NavSatFix,self.gps_data)
         rospy.Subscriber('/input_gps',custom_gps,self.input_gps_callback)
 
         #addtional
-        self.pub_lat_error=rospy.Publisher('/n_lat_error',Float64,queue_size=1)
-        self.pub_long_error=rospy.Publisher('/n_long_error',Float64,queue_size=1)
-        self.pub_alt_error=rospy.Publisher('/n_alt_error',Float64,queue_size=1)
-        self.pub_out_pitch=rospy.Publisher('/n_out_pitch',Float64,queue_size=1)
-        self.pub_out_yaw=rospy.Publisher('/n_out_yaw',Float64,queue_size=1)
+        self.pub_lat_error=rospy.Publisher('/n_lat_error',Float64,queue_size=100)
+        self.pub_long_error=rospy.Publisher('/n_long_error',Float64,queue_size=100)
+        self.pub_alt_error=rospy.Publisher('/n_alt_error',Float64,queue_size=100)
+        self.pub_out_pitch=rospy.Publisher('/n_out_pitch',Float64,queue_size=100)
+        self.pub_out_yaw=rospy.Publisher('/n_out_yaw',Float64,queue_size=100)
 
 
 
@@ -92,5 +92,3 @@ if __name__== '__main__':
 while not rospy.is_shutdown():
   pose.gps()
   r.sleep()
-
-
