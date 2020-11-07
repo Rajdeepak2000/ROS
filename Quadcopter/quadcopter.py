@@ -18,7 +18,9 @@ CODE MODULARITY AND TECHNIQUES MENTIONED LIKE THIS WILL HELP YOU GAINING MORE MA
 from vitarana_drone.msg import *
 from pid_tune.msg import PidTune
 from sensor_msgs.msg import Imu
+from sensor_msgs.msg import NavSatFix
 from std_msgs.msg import Float64
+
 import rospy
 import time
 import tf
@@ -54,6 +56,11 @@ class Edrone():
         self.pwm_cmd.prop2 = 0.0
         self.pwm_cmd.prop3 = 0.0
         self.pwm_cmd.prop4 = 0.0
+        self.setpoint_lat=0.0
+        self.setpoint_long=0.0
+        self.lat=0.0
+        self.long=0.0
+
 
         # initial setting of Kp, Kd and ki for [roll, pitch, yaw]. eg: self.Kp[2] corresponds to Kp value in yaw axis
         # after tuning and computing corresponding PID parameters, change the parameters
@@ -80,32 +87,33 @@ class Edrone():
         self.sample_time = 0.060  # in seconds
 
         # Publishing /edrone/pwm, /roll_error, /pitch_error, /yaw_error
-        self.pwm_pub = rospy.Publisher('/edrone/pwm',prop_speed, queue_size=1)
-        self.roll_pub = rospy.Publisher('/roll_error',Float64, queue_size=1)
-        self.pitch_pub = rospy.Publisher('/pitch_error',Float64, queue_size=1)
-        self.yaw_pub = rospy.Publisher('/yaw_error',Float64, queue_size=1)
+        self.pwm_pub = rospy.Publisher('/edrone/pwm',prop_speed, queue_size=100)
+        self.roll_pub = rospy.Publisher('/roll_error',Float64, queue_size=100)
+        self.pitch_pub = rospy.Publisher('/pitch_error',Float64, queue_size=100)
+        self.yaw_pub = rospy.Publisher('/yaw_error',Float64, queue_size=100)
+        
 
 
 
         #additional part
-        self.drone_orientation_euler_0=rospy.Publisher('/euler_orientation_0',Float64,queue_size=1)
-        self.drone_orientation_euler_1=rospy.Publisher('/euler_orientation_1',Float64,queue_size=1)
-        self.drone_orientation_euler_2=rospy.Publisher('/euler_orientation_2',Float64,queue_size=1)
-        self.setpoint_cmd_0=rospy.Publisher('/setpoint_cmd_0',Float64,queue_size=1)
-        self.setpoint_cmd_1=rospy.Publisher('/setpoint_cmd_1',Float64,queue_size=1)
-        self.setpoint_cmd_2=rospy.Publisher('/setpoint_cmd_2',Float64,queue_size=1)
-        self.setpoint_euler_0=rospy.Publisher('/setpoint_euler_0',Float64,queue_size=1)
-        self.setpoint_euler_1=rospy.Publisher('/setpoint_euler_1',Float64,queue_size=1)
-        self.setpoint_euler_2=rospy.Publisher('/setpoint_euler_2',Float64,queue_size=1)
-        self.error_0=rospy.Publisher('/error_0',Float64,queue_size=1)
-        self.error_1=rospy.Publisher('/error_1',Float64,queue_size=1)
-        self.error_2=rospy.Publisher('/error_2',Float64,queue_size=1)
-        self.diff_err_0=rospy.Publisher('/diff_err_0',Float64,queue_size=1)
-        self.diff_err_1=rospy.Publisher('/diff_err_1',Float64,queue_size=1)
-        self.diff_err_2=rospy.Publisher('/diff_err_2',Float64,queue_size=1)
-        self.iterm_0=rospy.Publisher('/iterm_0',Float64,queue_size=1)
-        self.iterm_1=rospy.Publisher('/iterm_1',Float64,queue_size=1)
-        self.iterm_2=rospy.Publisher('/iterm_2',Float64,queue_size=1)
+        self.drone_orientation_euler_0=rospy.Publisher('/euler_orientation_0',Float64,queue_size=100)
+        self.drone_orientation_euler_1=rospy.Publisher('/euler_orientation_1',Float64,queue_size=100)
+        self.drone_orientation_euler_2=rospy.Publisher('/euler_orientation_2',Float64,queue_size=100)
+        self.setpoint_cmd_0=rospy.Publisher('/setpoint_cmd_0',Float64,queue_size=100)
+        self.setpoint_cmd_1=rospy.Publisher('/setpoint_cmd_1',Float64,queue_size=100)
+        self.setpoint_cmd_2=rospy.Publisher('/setpoint_cmd_2',Float64,queue_size=100)
+        self.setpoint_euler_0=rospy.Publisher('/setpoint_euler_0',Float64,queue_size=100)
+        self.setpoint_euler_1=rospy.Publisher('/setpoint_euler_1',Float64,queue_size=100)
+        self.setpoint_euler_2=rospy.Publisher('/setpoint_euler_2',Float64,queue_size=100)
+        self.error_0=rospy.Publisher('/error_0',Float64,queue_size=100)
+        self.error_1=rospy.Publisher('/error_1',Float64,queue_size=100)
+        self.error_2=rospy.Publisher('/error_2',Float64,queue_size=100)
+        self.diff_err_0=rospy.Publisher('/diff_err_0',Float64,queue_size=100)
+        self.diff_err_1=rospy.Publisher('/diff_err_1',Float64,queue_size=100)
+        self.diff_err_2=rospy.Publisher('/diff_err_2',Float64,queue_size=100)
+        self.iterm_0=rospy.Publisher('/iterm_0',Float64,queue_size=100)
+        self.iterm_1=rospy.Publisher('/iterm_1',Float64,queue_size=100)
+        self.iterm_2=rospy.Publisher('/iterm_2',Float64,queue_size=100)
 
        
         
@@ -115,6 +123,8 @@ class Edrone():
 
         # Subscribing to /drone_command, imu/data, /pid_tuning_roll, /pid_tuning_pitch, /pid_tuning_yaw
         rospy.Subscriber('/drone_command', edrone_cmd, self.drone_command_callback)
+        rospy.Subscriber('/edrone/gps',NavSatFix,self.gps_data)
+        rospy.Subscriber('/input_gps',custom_gps,self.input_gps_callback)
         rospy.Subscriber('/edrone/imu/data', Imu, self.imu_callback)
         rospy.Subscriber('/pid_tuning_roll', PidTune, self.roll_set_pid)
         rospy.Subscriber('/pid_tuning_pitch', PidTune, self.pitch_set_pid)
@@ -149,6 +159,16 @@ class Edrone():
         self.setpoint_cmd[1] = msg.rcYaw
         self.setpoint_cmd[2] = msg.rcPitch
         self.setpoint_cmd[3] = msg.rcThrottle
+
+    def gps_data(self, msg):
+        self.lat=msg.latitude
+        self.long=msg.longitude
+        self.alt=msg.altitude
+
+    def input_gps_callback(self, msg):
+        self.setpoint_lat=msg.gps_lat
+        self.setpoint_long=msg.gps_long
+        self.setpoint_alt=msg.gps_alt
         
   
         
@@ -216,27 +236,32 @@ class Edrone():
         self.output_pitch = self.Kp[1]*self.error[1] + self.iterm[1] + self.Kd[1]*(self.diff_err[1])
         self.output_yaw = self.Kp[2]*self.error[2] + self.iterm[2] + self.Kd[2]*(self.diff_err[2])
         
-        
+        if(self.setpoint_lat!= self.lat or self.setpoint_long != self.long ):
         #6.calculating the prop speed
-        self.pwm_cmd.prop1=self.pwm_cmd.prop1- self.output_roll + self.output_pitch + self.output_yaw
-        self.pwm_cmd.prop2=self.pwm_cmd.prop2+ self.output_roll + self.output_pitch - self.output_yaw
-        self.pwm_cmd.prop3=self.pwm_cmd.prop3+ self.output_roll - self.output_pitch + self.output_yaw
-        self.pwm_cmd.prop4=self.pwm_cmd.prop4- self.output_roll - self.output_pitch - self.output_yaw
+           self.pwm_cmd.prop1=self.pwm_cmd.prop1- self.output_roll + self.output_pitch + self.output_yaw
+           self.pwm_cmd.prop2=self.pwm_cmd.prop2+ self.output_roll + self.output_pitch - self.output_yaw
+           self.pwm_cmd.prop3=self.pwm_cmd.prop3+ self.output_roll - self.output_pitch + self.output_yaw
+           self.pwm_cmd.prop4=self.pwm_cmd.prop4- self.output_roll - self.output_pitch - self.output_yaw
         #8.limiting values
 
-        if(self.pwm_cmd.prop1 > self.max_values[0]):self.pwm_cmd.prop1 = self.max_values[0]
-        if(self.pwm_cmd.prop2 > self.max_values[1]):self.pwm_cmd.prop2 = self.max_values[1]
-        if(self.pwm_cmd.prop3 > self.max_values[2]):self.pwm_cmd.prop3 = self.max_values[2]
-        if(self.pwm_cmd.prop4 > self.max_values[3]):self.pwm_cmd.prop4 = self.max_values[3]
+           if(self.pwm_cmd.prop1 > self.max_values[0]):self.pwm_cmd.prop1 = self.max_values[0]
+           if(self.pwm_cmd.prop2 > self.max_values[1]):self.pwm_cmd.prop2 = self.max_values[1]
+           if(self.pwm_cmd.prop3 > self.max_values[2]):self.pwm_cmd.prop3 = self.max_values[2]
+           if(self.pwm_cmd.prop4 > self.max_values[3]):self.pwm_cmd.prop4 = self.max_values[3]
 
-        if(self.pwm_cmd.prop1 < self.min_values[0]):self.pwm_cmd.prop1 = self.min_values[0]
-        if(self.pwm_cmd.prop2 < self.min_values[1]):self.pwm_cmd.prop2 = self.min_values[1]
-        if(self.pwm_cmd.prop3 < self.min_values[2]):self.pwm_cmd.prop3 = self.min_values[2]
-        if(self.pwm_cmd.prop4 < self.min_values[3]):self.pwm_cmd.prop4 = self.min_values[3]
-
+           if(self.pwm_cmd.prop1 < self.min_values[0]):self.pwm_cmd.prop1 = self.min_values[0]
+           if(self.pwm_cmd.prop2 < self.min_values[1]):self.pwm_cmd.prop2 = self.min_values[1]
+           if(self.pwm_cmd.prop3 < self.min_values[2]):self.pwm_cmd.prop3 = self.min_values[2]
+           if(self.pwm_cmd.prop4 < self.min_values[3]):self.pwm_cmd.prop4 = self.min_values[3]
         
 
-        
+        if(self.setpoint_lat == self.lat or self.setpoint_long == self.long ):
+
+
+           self.pwm_cmd.prop1 = 0.0
+           self.pwm_cmd.prop2 = 0.0
+           self.pwm_cmd.prop3 = 0.0
+           self.pwm_cmd.prop4 = 0.0
 
         
         
